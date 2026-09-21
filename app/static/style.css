@@ -185,10 +185,21 @@ label {
     }
 }
 
+/* Wider container for two-column tool layouts with label preview */
+@media (min-width: 1100px) {
+    .container {
+        max-width: 1200px;
+    }
+}
+
 /* Scaled DOM preview wrapper — contains the CSS-transformed label */
 #previewScaleWrapper {
+    position: relative;
+    width: 100%;
     overflow: hidden;
-    max-width: 100%;
+    border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 8px;
+    background: white;
 }
 
 .preview-container {

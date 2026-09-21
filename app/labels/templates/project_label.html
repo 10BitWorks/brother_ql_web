@@ -78,8 +78,8 @@
             <h3 style="margin-top: 0; text-align: center;">Live Preview</h3>
             <div class="preview-container">
                 <!-- Live DOM preview — no html2canvas needed, just CSS-scaled label -->
-                <div id="previewScaleWrapper" style="overflow: hidden; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; background: white;">
-                    <div id="labelRenderContainer" style="padding: 0; box-sizing: border-box; background: white; color: black; font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; justify-content: flex-start; transform-origin: top left;">
+                <div id="previewScaleWrapper">
+                    <div id="labelRenderContainer" style="position: absolute; top: 0; left: 0; padding: 0; box-sizing: border-box; background: white; color: black; font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; justify-content: flex-start; transform-origin: top left;">
                         
                         <!-- Header with Logo and Date -->
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid black; padding-bottom: 20px; margin-bottom: 30px;">
@@ -279,12 +279,18 @@
     function rescalePreview() {
         const wrapper = document.getElementById('previewScaleWrapper');
         const container = document.getElementById('labelRenderContainer');
+        
+        // Temporarily reset transform to measure natural dimensions
+        container.style.transform = 'none';
+        const naturalWidth = container.offsetWidth || 696;
+        const naturalHeight = container.offsetHeight || 400;
+        
         const availWidth = wrapper.clientWidth;
-        const contentWidth = container.scrollWidth || 696;
-        const scale = Math.min(1, availWidth / contentWidth);
+        const scale = availWidth / naturalWidth;
+        
         container.style.transform = 'scale(' + scale + ')';
-        // Set wrapper height to match the scaled content so it doesn't clip
-        wrapper.style.height = (container.scrollHeight * scale) + 'px';
+        // Wrapper must explicitly set height since child is position:absolute
+        wrapper.style.height = Math.ceil(naturalHeight * scale) + 'px';
     }
 
     function dataURLtoBlob(dataurl) {
