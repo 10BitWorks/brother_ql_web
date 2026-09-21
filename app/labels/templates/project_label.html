@@ -99,10 +99,10 @@
                             </div>
                         </div>
                         
-                        <!-- Content -->
-                        <div style="position: relative; width: 100%; height: 70px;" id="nameContactContainer">
-                            <div style="position: absolute; left: 0; bottom: 0; font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap; max-width: 65%; overflow: hidden;" id="renderName">Name</div>
-                            <div style="position: absolute; right: 0; bottom: 5px; font-size: 30px; font-weight: 600; color: #444; white-space: nowrap; max-width: 33%; overflow: hidden;" id="renderContact">Contact</div>
+                        <!-- Content: name + contact, wraps if too wide -->
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;" id="nameContactContainer">
+                            <div style="font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap;" id="renderName">Name</div>
+                            <div style="font-size: 30px; font-weight: 600; color: #444; white-space: nowrap;" id="renderContact">Contact</div>
                         </div>
                         
                         <!-- Notes block -->
@@ -246,7 +246,6 @@
         if (displayName) {
             elName.style.display = 'block';
             elName.innerText = displayName;
-            fitText(elName, 60);
         } else {
             elName.style.display = 'none';
         }
@@ -259,7 +258,6 @@
             } else {
                 elContact.innerText = contactInfo;
             }
-            fitText(elContact, 30);
         } else {
             elContact.style.display = 'none';
         }
