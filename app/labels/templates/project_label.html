@@ -101,8 +101,8 @@
                         
                         <!-- Content: name + contact, wraps if too wide -->
                         <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;" id="nameContactContainer">
-                            <div style="font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap;" id="renderName">Name</div>
-                            <div style="font-size: 30px; font-weight: 600; color: #444; white-space: nowrap;" id="renderContact">Contact</div>
+                            <div style="font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; max-width: 100%;" id="renderName">Name</div>
+                            <div style="font-size: 30px; font-weight: 600; color: #444;" id="renderContact">Contact</div>
                         </div>
                         
                         <!-- Notes block -->
@@ -246,6 +246,7 @@
         if (displayName) {
             elName.style.display = 'block';
             elName.innerText = displayName;
+            fitText(elName, 60);
         } else {
             elName.style.display = 'none';
         }
