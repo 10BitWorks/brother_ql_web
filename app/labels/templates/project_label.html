@@ -100,9 +100,9 @@
                         </div>
                         
                         <!-- Content: name + contact, wraps if too wide -->
-                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;" id="nameContactContainer">
-                            <div style="font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; max-width: 100%;" id="renderName">Name</div>
-                            <div style="font-size: 30px; font-weight: 600; color: #444;" id="renderContact">Contact</div>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end;" id="nameContactContainer">
+                            <div style="font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; max-width: 100%; margin-right: 15px; margin-bottom: 5px;" id="renderName">Name</div>
+                            <div style="font-size: 30px; font-weight: 600; color: #444; margin-bottom: 8px;" id="renderContact">Contact</div>
                         </div>
                         
                         <!-- Notes block -->
@@ -211,8 +211,9 @@
         el.style.fontSize = defaultSize + 'px';
         if (document.getElementById('orientation').value !== 'standard') return;
         
+        const maxWidth = 696;
         let currentSize = defaultSize;
-        while (el.scrollWidth > el.clientWidth && currentSize > 20) {
+        while (el.scrollWidth > maxWidth && currentSize > 20) {
             currentSize -= 2;
             el.style.fontSize = currentSize + 'px';
         }
@@ -389,8 +390,8 @@
         });
     }
 
-    // Initial preview + scale
-    updatePreview();
+    // Initial mode selection, preview + scale
+    toggleMoopMode();
     window.addEventListener('resize', rescalePreview);
 </script>
 {% endblock %}
