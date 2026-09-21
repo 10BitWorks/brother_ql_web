@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block head %}
+<!-- Include html2canvas for print-time label rendering only -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <a href="{{ url_for('main.index') }}" style="color: var(--text-color); float: left; font-size: 1.5rem;"><i
+            class="fas fa-arrow-left"></i></a>
+    <h1>New M.O.O.P. Label</h1>
+</div>
+
+<div class="glass-panel" style="padding: 20px;">
+    <div class="tool-layout">
+        <!-- Form Side -->
+        <div>
+            <form id="projectLabelForm">
+                <div class="form-group">
+                    <label>Labeling for</label>
+                    <div style="display: flex; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 20px; padding: 5px;">
+                        <input type="radio" id="moopMy" name="moopType" value="my" style="display:none;" onchange="toggleMoopMode()" checked>
+                        <label for="moopMy" style="flex: 1; text-align: center; padding: 8px; border-radius: 15px; cursor: pointer; margin: 0; transition: background 0.3s; font-weight: bold;" id="lblMoopMy">My MOOP</label>
+                        
+                        <input type="radio" id="moopOther" name="moopType" value="other" style="display:none;" onchange="toggleMoopMode()">
+                        <label for="moopOther" style="flex: 1; text-align: center; padding: 8px; border-radius: 15px; cursor: pointer; margin: 0; transition: background 0.3s; color: rgba(255,255,255,0.5);" id="lblMoopOther">Someone else's MOOP</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label id="memberNameLabel" for="memberName">Member Name *</label>
+                    <input type="text" class="form-control" id="memberName" placeholder="e.g. Jane Doe" oninput="updatePreview()" autocomplete="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true">
+                </div>
+                
+                <div class="form-group">
+                    <label id="infoLabelBwEvade" for="infoFieldBwEvade">Contact Details *</label>
+                    <input type="text" class="form-control" id="infoFieldBwEvade" placeholder="e.g. email / text" oninput="updatePreview()" autocomplete="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes / Project Info</label>
+                    <textarea class="form-control" id="notes" rows="3"
+                        placeholder="e.g. Arduino Weather Station - Do not touch" oninput="updatePreview()"></textarea>
+                </div>
+
+                <div class="form-group" style="display: none;" id="dateGroup">
+                    <label for="date" id="dateLabel">Abandoned (Estimate)</label>
+                    <input type="date" class="form-control" id="date" onchange="updateDateDisplay()">
+                </div>
+                
+
+                
+                <h4 style="margin-top: 20px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 5px;">Label Settings</h4>
+                
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                    <div>
+                        <label for="orientation">Orientation</label>
+                        <select class="form-control" id="orientation" onchange="updatePreview()">
+                            <option value="standard" {% if default_orientation == 'standard' %}selected{% endif %}>Standard</option>
+                            <option value="rotated" {% if default_orientation == 'rotated' %}selected{% endif %}>Rotated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="button" class="btn-glass" id="printBtn"
+                        style="width: 100%; background: var(--card-bg-project); border-color: var(--neon-blue);"
+                        onclick="printProjectLabel()">
+                        <i class="fas fa-print"></i> Print Label
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Side -->
+        <div>
+            <h3 style="margin-top: 0; text-align: center;">Live Preview</h3>
+            <div class="preview-container">
+                <!-- Live DOM preview — no html2canvas needed, just CSS-scaled label -->
+                <div id="previewScaleWrapper" style="overflow: hidden; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; background: white;">
+                    <div id="labelRenderContainer" style="padding: 0; box-sizing: border-box; background: white; color: black; font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; justify-content: flex-start; transform-origin: top left;">
+                        
+                        <!-- Header with Logo and Date -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid black; padding-bottom: 20px; margin-bottom: 30px;">
+                            <!-- Started Date -->
+                            <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                <div id="renderStartedLabel" style="font-size: 30px; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;">LABELED</div>
+                                <div style="border: 6px solid black; background: black; color: white; border-radius: 15px; padding: 10px 20px; font-size: 60px; font-weight: 600; font-family: 'JetBrains Mono', monospace;" id="renderDate"></div>
+                            </div>
+                            
+                            <!-- Centered Logo -->
+                            <img src="{{ url_for('static', filename='images/cube-transparent.png') }}" style="height: 220px; margin-bottom: -90px; position: relative; z-index: 10; filter: grayscale(100%);">
+                            
+                            <!-- Expires Date -->
+                            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                                <div id="renderExpiresLabel" style="font-size: 30px; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;">EXPIRES</div>
+                                <div style="border: 6px solid black; background: black; color: white; border-radius: 15px; padding: 10px 20px; font-size: 60px; font-weight: 600; font-family: 'JetBrains Mono', monospace;" id="renderExpires"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div style="position: relative; width: 100%; height: 70px;" id="nameContactContainer">
+                            <div style="position: absolute; left: 0; bottom: 0; font-size: 60px; font-weight: 800; line-height: 1.1; white-space: nowrap; max-width: 65%; overflow: hidden;" id="renderName">Name</div>
+                            <div style="position: absolute; right: 0; bottom: 5px; font-size: 30px; font-weight: 600; color: #444; white-space: nowrap; max-width: 33%; overflow: hidden;" id="renderContact">Contact</div>
+                        </div>
+                        
+                        <!-- Notes block -->
+                        <div style="font-size: 30px; line-height: 1.3; border-left: 15px solid black; padding-left: 40px; margin-top: 40px; flex-grow: 1; font-weight: 500; overflow-wrap: break-word; word-break: break-word;" id="renderNotes">
+                            Notes
+                        </div>
+                    </div>
+                </div>
+                <div id="previewLoader" style="display: none; margin-top: 10px; color: var(--neon-blue);">
+                    <i class="fas fa-spinner fa-spin"></i> Rendering for print...
+                </div>
+            </div>
+            <p style="text-align: center; opacity: 0.7; font-size: 0.9rem;" id="printStatus">Fill in details to see preview.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Calculate CDT Date with optional added days
+    function getCDTDateInfo(addDays = 0) {
+        const d = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Chicago"}));
+        if (addDays > 0) {
+            d.setDate(d.getDate() + addDays);
+        }
+        return {
+            full: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'),
+            year: d.getFullYear(),
+            short: String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0')
+        };
+    }
+    
+    const started = getCDTDateInfo(0);
+    const expires = getCDTDateInfo(14);
+    
+    document.getElementById('date').value = started.full;
+    document.getElementById('renderDate').innerText = started.short;
+    document.getElementById('renderStartedLabel').innerText = started.year + " MOOP";
+    
+    document.getElementById('renderExpires').innerText = expires.short;
+    document.getElementById('renderExpiresLabel').innerText = "EXPIRES " + expires.year;
+
+    // Set date limits
+    const today = new Date();
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(today.getDate() - 14);
+    const dateInput = document.getElementById('date');
+    dateInput.max = today.toISOString().split('T')[0];
+    dateInput.min = twoWeeksAgo.toISOString().split('T')[0];
+
+    function updateDateDisplay() {
+        const dateVal = document.getElementById('date').value;
+        if (!dateVal) return;
+        const d = new Date(dateVal + 'T12:00:00');
+        document.getElementById('renderDate').innerText = String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+        document.getElementById('renderStartedLabel').innerText = d.getFullYear() + " MOOP";
+        updatePreview();
+    }
+
+    function toggleMoopMode() {
+        const mode = document.querySelector('input[name="moopType"]:checked').value;
+        const nameEl = document.getElementById('memberName');
+        const contactEl = document.getElementById('infoFieldBwEvade');
+        const notesEl = document.getElementById('notes');
+        const dateGroup = document.getElementById('dateGroup');
+        const contactLabel = document.getElementById('infoLabelBwEvade');
+        
+        if (mode === 'my') {
+            document.getElementById('lblMoopMy').style.background = 'var(--neon-blue)';
+            document.getElementById('lblMoopMy').style.color = 'white';
+            document.getElementById('lblMoopOther').style.background = 'transparent';
+            document.getElementById('lblMoopOther').style.color = 'rgba(255,255,255,0.5)';
+
+            document.getElementById('memberNameLabel').innerText = 'Member Name *';
+            nameEl.placeholder = 'e.g. Jane Doe';
+            nameEl.required = true;
+            
+            contactLabel.innerText = 'Contact Details *';
+            contactEl.placeholder = 'e.g. email / text';
+            contactEl.required = true;
+            
+            dateGroup.style.display = 'none';
+            if (nameEl.value === "Yours?") nameEl.value = "";
+            if (notesEl.value.startsWith("Abandoned without label")) notesEl.value = "";
+        } else {
+            document.getElementById('lblMoopOther').style.background = 'var(--neon-blue)';
+            document.getElementById('lblMoopOther').style.color = 'white';
+            document.getElementById('lblMoopMy').style.background = 'transparent';
+            document.getElementById('lblMoopMy').style.color = 'rgba(255,255,255,0.5)';
+
+            document.getElementById('memberNameLabel').innerText = 'Abandoning Member (if known)';
+            nameEl.placeholder = 'e.g. Jane Doe';
+            nameEl.required = false;
+            
+            contactLabel.innerText = 'Discovered by (your name) *';
+            contactEl.placeholder = 'e.g. Jane Doe';
+            contactEl.required = true;
+            
+            dateGroup.style.display = 'block';
+            if (nameEl.value === "") nameEl.value = "Yours?"; // Default to Yours?
+            if (!notesEl.value) notesEl.value = "Abandoned without label. If this is your mess / project / Matter Out Of Place, please clean up or print new label(s). See also our Abandonment Policy.";
+        }
+        updatePreview();
+    }
+
+    function fitText(el, defaultSize) {
+        el.style.fontSize = defaultSize + 'px';
+        if (document.getElementById('orientation').value !== 'standard') return;
+        
+        let currentSize = defaultSize;
+        while (el.scrollWidth > el.clientWidth && currentSize > 20) {
+            currentSize -= 2;
+            el.style.fontSize = currentSize + 'px';
+        }
+    }
+
+    // Live DOM preview — directly updates the visible label element.
+    // No html2canvas, no debounce needed. Instant.
+    function updatePreview() {
+        const memberName = document.getElementById('memberName').value.trim();
+        const contactInfo = document.getElementById('infoFieldBwEvade').value.trim();
+        const notes = document.getElementById('notes').value.trim();
+        const orientation = document.getElementById('orientation').value;
+        const renderContainer = document.getElementById('labelRenderContainer');
+        const mode = document.querySelector('input[name="moopType"]:checked').value;
+        
+        // Dynamically adjust dimensions based on orientation
+        if (orientation === 'standard') {
+            renderContainer.style.width = '696px';
+            renderContainer.style.height = 'auto';
+            renderContainer.style.minHeight = '10px';
+            renderContainer.style.minWidth = '0';
+        } else {
+            renderContainer.style.width = 'auto';
+            renderContainer.style.height = '696px';
+            renderContainer.style.minWidth = '696px';
+            renderContainer.style.minHeight = '0';
+        }
+
+        const elName = document.getElementById('renderName');
+        const displayName = memberName || (mode === 'other' ? "Yours?" : "");
+        if (displayName) {
+            elName.style.display = 'block';
+            elName.innerText = displayName;
+            fitText(elName, 60);
+        } else {
+            elName.style.display = 'none';
+        }
+
+        const elContact = document.getElementById('renderContact');
+        if (contactInfo) {
+            elContact.style.display = 'block';
+            if (mode === 'other') {
+                elContact.innerText = "Discovered by " + contactInfo;
+            } else {
+                elContact.innerText = contactInfo;
+            }
+            fitText(elContact, 30);
+        } else {
+            elContact.style.display = 'none';
+        }
+
+        const elNotes = document.getElementById('renderNotes');
+        if (notes) {
+            elNotes.style.display = 'block';
+            elNotes.innerText = notes;
+        } else {
+            elNotes.style.display = 'none';
+        }
+
+        // Update CSS scale to fit the preview area
+        rescalePreview();
+    }
+
+    function rescalePreview() {
+        const wrapper = document.getElementById('previewScaleWrapper');
+        const container = document.getElementById('labelRenderContainer');
+        const availWidth = wrapper.clientWidth;
+        const contentWidth = container.scrollWidth || 696;
+        const scale = Math.min(1, availWidth / contentWidth);
+        container.style.transform = 'scale(' + scale + ')';
+        // Set wrapper height to match the scaled content so it doesn't clip
+        wrapper.style.height = (container.scrollHeight * scale) + 'px';
+    }
+
+    function dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], {type:mime});
+    }
+
+    function printProjectLabel() {
+        const form = document.getElementById('projectLabelForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const orientation = document.getElementById('orientation').value;
+        const renderContainer = document.getElementById('labelRenderContainer');
+
+        const btn = document.getElementById('printBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rendering...';
+        document.getElementById('printStatus').innerHTML = 'Generating print image...';
+        document.getElementById('previewLoader').style.display = 'block';
+
+        // Use html2canvas ONLY at print time — one-shot, with timeout safety net
+        const h2cPromise = html2canvas(renderContainer, {
+            scale: 1,
+            logging: false,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+
+        const timeoutPromise = new Promise(function(_, reject) {
+            setTimeout(function() { reject(new Error('html2canvas timeout')); }, 5000);
+        });
+
+        Promise.race([h2cPromise, timeoutPromise]).then(function(canvas) {
+            // Darken grays for thermal printer contrast
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] > 0 && data[i] < 250) {
+                    const factor = 0.85;
+                    data[i] = data[i] * factor;
+                    data[i+1] = data[i+1] * factor;
+                    data[i+2] = data[i+2] * factor;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            const base64 = canvas.toDataURL("image/png");
+            document.getElementById('previewLoader').style.display = 'none';
+            document.getElementById('printStatus').innerHTML = 'Sending to printer...';
+
+            const formData = new FormData();
+            formData.append('label_size', '62');
+            formData.append('orientation', orientation);
+            formData.append('print_type', 'image');
+            formData.append('image_mode', 'grayscale');
+            
+            const imageBlob = dataURLtoBlob(base64);
+            formData.append('image', imageBlob, 'label.png');
+
+            return fetch('/labeldesigner/api/print', {
+                method: 'POST',
+                body: formData
+            }).then(function(response) { return response.json(); });
+        }).then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-print"></i> Print Label';
+            if (data && data.success) {
+                document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-green);"><i class="fas fa-check"></i> Printed successfully!</span>';
+            } else if (data) {
+                alert("Error printing label: " + data.message);
+                document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-orange);"><i class="fas fa-exclamation-triangle"></i> Failed to print.</span>';
+            }
+        }).catch(function(err) {
+            console.error('Print error:', err);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-print"></i> Print Label';
+            document.getElementById('previewLoader').style.display = 'none';
+            if (err.message === 'html2canvas timeout') {
+                document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-orange);"><i class="fas fa-exclamation-triangle"></i> Render timed out. Try again.</span>';
+            } else {
+                alert("An error occurred: " + err.message);
+                document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-orange);"><i class="fas fa-exclamation-triangle"></i> Error.</span>';
+            }
+        });
+    }
+
+    // Initial preview + scale
+    updatePreview();
+    window.addEventListener('resize', rescalePreview);
+</script>
+{% endblock %}

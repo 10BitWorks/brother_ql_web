@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <a href="{{ url_for('main.index') }}" style="color: var(--text-color); float: left; font-size: 1.5rem;"><i
+            class="fas fa-arrow-left"></i></a>
+    <h1>Asset Label</h1>
+</div>
+
+<div class="glass-panel" style="padding: 20px;">
+    <div class="tool-layout">
+        <!-- Form Side -->
+        <div>
+            <form id="assetLabelForm">
+                <div class="form-group">
+                    <label for="assetName">Asset Name</label>
+                    <input type="text" class="form-control" id="assetName" placeholder="e.g. Soldering Station A" oninput="debouncePreview()" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="assetId">Asset ID / URL</label>
+                    <div class="input-group" style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control" id="assetId" placeholder="e.g. 10bw-001 or URL" oninput="debouncePreview()" required>
+                        <button type="button" class="btn-glass" style="font-size: 0.8rem; flex-shrink: 0;"
+                            onclick="generateId()">Generate ID</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="includeQr" style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="includeQr" onchange="debouncePreview()" checked style="margin-right: 10px; width: 20px; height: 20px;"> 
+                        Include QR Code
+                    </label>
+                </div>
+                
+                <h4 style="margin-top: 20px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 5px;">Label Settings</h4>
+                
+                <div class="form-group">
+                    <label for="fontFamily">Font</label>
+                    <select class="form-control" id="fontFamily" onchange="debouncePreview()">
+                        {% for font in font_family_names %}
+                        <option value="{{ font }}">{{ font }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="labelSize">Label Size</label>
+                        <select class="form-control" id="labelSize" onchange="debouncePreview()">
+                            {% for size in label_sizes %}
+                            <option value="{{ size[0] }}" {% if size[0] == default_label_size %}selected{% endif %}>{{ size[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="orientation">Orientation</label>
+                        <select class="form-control" id="orientation" onchange="debouncePreview()">
+                            <option value="standard" {% if default_orientation == 'standard' %}selected{% endif %}>Standard</option>
+                            <option value="rotated" {% if default_orientation == 'rotated' %}selected{% endif %}>Rotated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="button" class="btn-glass" id="printBtn"
+                        style="width: 100%; background: var(--card-bg-asset); border-color: var(--neon-orange);"
+                        onclick="printAssetLabel()">
+                        <i class="fas fa-print"></i> Print Asset Label
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview Side -->
+        <div>
+            <h3 style="margin-top: 0; text-align: center;">Live Preview</h3>
+            <div class="preview-container">
+                <img id="previewImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Label Preview">
+                <div id="previewLoader" style="display: none; margin-top: 10px; color: var(--neon-orange);">
+                    <i class="fas fa-spinner fa-spin"></i> Updating...
+                </div>
+            </div>
+            <p style="text-align: center; opacity: 0.7; font-size: 0.9rem;" id="printStatus">Fill in details to see preview.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Default font
+    const fontSelect = document.getElementById('fontFamily');
+    for (let i = 0; i < fontSelect.options.length; i++) {
+        if (fontSelect.options[i].value === 'Brussels') {
+            fontSelect.selectedIndex = i;
+            break;
+        }
+    }
+
+    let previewTimeout = null;
+    
+    function generateId() {
+        const randomId = '10BW-' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('assetId').value = randomId;
+        debouncePreview();
+    }
+
+    function getFormData() {
+        const assetName = document.getElementById('assetName').value;
+        const assetId = document.getElementById('assetId').value;
+        const includeQr = document.getElementById('includeQr').checked;
+        
+        const fontFamily = document.getElementById('fontFamily').value;
+        const labelSize = document.getElementById('labelSize').value;
+        const orientation = document.getElementById('orientation').value;
+
+        let printType = 'text';
+        let text = ' ';
+        
+        if (assetName || assetId) {
+            text = assetId + " | " + assetName;
+            if (includeQr) {
+                printType = 'qrcode_text';
+            }
+        }
+
+        return new URLSearchParams({
+            text: text,
+            font_size: {{ default_font_size }},
+            font_family: fontFamily,
+            label_size: labelSize,
+            orientation: orientation,
+            print_type: printType,
+            align: 'center',
+            qrcode_size: 8
+        });
+    }
+
+    function debouncePreview() {
+        clearTimeout(previewTimeout);
+        document.getElementById('previewLoader').style.display = 'block';
+        previewTimeout = setTimeout(updatePreview, 500);
+    }
+
+    function updatePreview() {
+        const params = getFormData();
+        fetch(`/labeldesigner/api/preview?return_format=base64`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: params.toString()
+        })
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('previewImg').src = 'data:image/png;base64,' + data;
+            document.getElementById('previewLoader').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error fetching preview:', error);
+            document.getElementById('previewLoader').style.display = 'none';
+        });
+    }
+
+    function printAssetLabel() {
+        const assetName = document.getElementById('assetName').value;
+        const assetId = document.getElementById('assetId').value;
+
+        if (!assetName || !assetId) {
+            alert("Please fill in Asset Name and ID");
+            return;
+        }
+
+        const params = getFormData();
+        const btn = document.getElementById('printBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Printing...';
+        document.getElementById('printStatus').innerHTML = 'Sending to printer...';
+
+        fetch(`/labeldesigner/api/print`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: params.toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-print"></i> Print Asset Label';
+            if (data.success) {
+                document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-green);"><i class="fas fa-check"></i> Printed successfully!</span>';
+            } else {
+                alert("Error printing label: " + data.message);
+                document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-orange);"><i class="fas fa-exclamation-triangle"></i> Failed to print.</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-print"></i> Print Asset Label';
+            alert("An error occurred.");
+            document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-orange);"><i class="fas fa-exclamation-triangle"></i> Network error.</span>';
+        });
+    }
+
+    // Initial preview
+    updatePreview();
+</script>
+{% endblock %}

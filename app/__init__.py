@@ -35,6 +35,9 @@ def create_app(config_class=Config):
     from app.labeldesigner import bp as labeldesigner_bp
     app.register_blueprint(labeldesigner_bp, url_prefix='/labeldesigner')
 
+    from app.labels import bp as labels_bp
+    app.register_blueprint(labels_bp, url_prefix='/labels')
+
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
 

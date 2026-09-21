@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <i class="fas fa-print fa-3x" style="color: var(--neon-blue); margin-bottom: 15px;"></i>
+    <h1>10BitWorks</h1>
+    <p style="opacity: 0.7; margin-top: 5px;">Label Printer System</p>
+</div>
+
+<div class="glass-panel" style="padding: 20px;">
+    <h3 style="text-align: center; margin-bottom: 20px;">Select Label Type</h3>
+
+    <div class="dashboard-grid">
+        <a href="{{ url_for('labels.project_label') }}" class="dashboard-card card-project">
+            <div class="card-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="card-title">New M.O.O.P. Label</div>
+            <div class="card-desc">For member projects & storage</div>
+        </a>
+
+        <a href="{{ url_for('labels.asset_label') }}" class="dashboard-card card-asset">
+            <div class="card-icon">
+                <i class="fas fa-box-open"></i>
+            </div>
+            <div class="card-title">Asset Label</div>
+            <div class="card-desc">For 10BitWorks assets & tools</div>
+        </a>
+
+        <a href="{{ url_for('labeldesigner.index') }}" class="dashboard-card card-classic">
+            <div class="card-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="card-title">Classic Designer</div>
+            <div class="card-desc">Advanced label designer tool</div>
+        </a>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 40px; opacity: 0.5; font-size: 0.8rem;">
+    <p>Brother QL-700 Ready</p>
+</div>
+{% endblock %}

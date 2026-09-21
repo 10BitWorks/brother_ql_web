@@ -1,6 +1,7 @@
-from flask import redirect, url_for
+from flask import render_template
 from . import bp
 
 @bp.route('/')
+@bp.route('/index')
 def index():
-    return redirect(url_for('labeldesigner.index'))
+    return render_template('dashboard.html')
