@@ -53,13 +53,17 @@
                 
                 <h4 style="margin-top: 20px; border-bottom: 1px dashed var(--glass-border); padding-bottom: 5px;">Label Settings</h4>
                 
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div>
                         <label for="orientation">Orientation</label>
                         <select class="form-control" id="orientation" onchange="updatePreview()">
                             <option value="standard" {% if default_orientation == 'standard' %}selected{% endif %}>Standard</option>
                             <option value="rotated" {% if default_orientation == 'rotated' %}selected{% endif %}>Rotated</option>
                         </select>
+                    </div>
+                    <div>
+                        <label for="printCount">Copies</label>
+                        <input type="number" class="form-control" id="printCount" min="1" max="10" value="1" required>
                     </div>
                 </div>
 
@@ -353,11 +357,13 @@
             document.getElementById('previewLoader').style.display = 'none';
             document.getElementById('printStatus').innerHTML = 'Sending to printer...';
 
+            const printCount = document.getElementById('printCount') ? document.getElementById('printCount').value : '1';
             const formData = new FormData();
             formData.append('label_size', '62');
             formData.append('orientation', orientation);
             formData.append('print_type', 'image');
             formData.append('image_mode', 'grayscale');
+            formData.append('print_count', printCount);
             
             const imageBlob = dataURLtoBlob(base64);
             formData.append('image', imageBlob, 'label.png');
