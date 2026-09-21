@@ -189,7 +189,7 @@
             
             dateGroup.style.display = 'none';
             if (nameEl.value === "Yours?") nameEl.value = "";
-            if (notesEl.value.startsWith("Abandoned without label")) notesEl.value = "";
+            if (notesEl.value.startsWith("Abandoned without label") || notesEl.value.startsWith("This \"Matter-Out-Of-Place\" was abandoned")) notesEl.value = "";
         } else {
             document.getElementById('lblMoopOther').style.background = 'var(--neon-blue)';
             document.getElementById('lblMoopOther').style.color = 'white';
@@ -206,7 +206,7 @@
             
             dateGroup.style.display = 'block';
             if (nameEl.value === "") nameEl.value = "Yours?"; // Default to Yours?
-            if (!notesEl.value) notesEl.value = "Abandoned without label. If this is your mess / project / Matter Out Of Place, please clean up or print new label(s). See also our Abandonment Policy.";
+            if (!notesEl.value) notesEl.value = "This \"Matter-Out-Of-Place\" was abandoned without label. If this is your mess, clean it up. If this is your project, properly label it - you can use this printer. Labeled MOOP must be removed within 2 weeks: see our Abandonment Policy.";
         }
         updatePreview();
     }
