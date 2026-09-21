@@ -326,6 +326,9 @@
             document.activeElement.blur();
         }
 
+        // Temporarily reset CSS scale so html2canvas captures at full 1:1 696px resolution
+        renderContainer.style.transform = 'none';
+
         // Use html2canvas ONLY at print time — one-shot, with timeout safety net
         const h2cPromise = html2canvas(renderContainer, {
             scale: 1,
@@ -339,6 +342,9 @@
         });
 
         Promise.race([h2cPromise, timeoutPromise]).then(function(canvas) {
+            // Restore preview scale
+            rescalePreview();
+
             // Darken grays for thermal printer contrast
             const ctx = canvas.getContext('2d');
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -382,6 +388,8 @@
                 document.getElementById('printStatus').innerHTML = '<span style="color: var(--neon-orange);"><i class="fas fa-exclamation-triangle"></i> Failed to print.</span>';
             }
         }).catch(function(err) {
+            // Restore preview scale on error
+            rescalePreview();
             console.error('Print error:', err);
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-print"></i> Print Label';
