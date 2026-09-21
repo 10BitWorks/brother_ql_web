@@ -30,7 +30,7 @@
                 
                 <div class="form-group">
                     <label id="memberNameLabel" for="memberName">Member Name *</label>
-                    <input type="text" class="form-control" id="memberName" placeholder="e.g. Jane Doe" oninput="updatePreview()" autocomplete="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true">
+                    <input type="text" class="form-control" id="memberName" placeholder="e.g. Jane Doe" oninput="updatePreview()" autocomplete="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" required>
                 </div>
                 
                 <div class="form-group">
@@ -311,6 +311,11 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rendering...';
         document.getElementById('printStatus').innerHTML = 'Generating print image...';
         document.getElementById('previewLoader').style.display = 'block';
+
+        // Blur focused element before html2canvas to prevent Firefox+extension hang
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
 
         // Use html2canvas ONLY at print time — one-shot, with timeout safety net
         const h2cPromise = html2canvas(renderContainer, {
