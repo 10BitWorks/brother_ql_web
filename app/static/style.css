@@ -185,6 +185,12 @@ label {
     }
 }
 
+/* Scaled DOM preview wrapper — contains the CSS-transformed label */
+#previewScaleWrapper {
+    overflow: hidden;
+    max-width: 100%;
+}
+
 .preview-container {
     display: flex;
     flex-direction: column;
@@ -198,9 +204,15 @@ label {
     margin-bottom: 20px;
 }
 
-.preview-container img {
+.preview-container > img {
     max-width: 100%;
     max-height: 400px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
+}
+
+/* Prevent label-internal images from inheriting preview styles */
+#labelRenderContainer img {
+    box-shadow: none !important;
+    filter: grayscale(100%) !important;
 }
