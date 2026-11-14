@@ -57,6 +57,22 @@ E.g.
     PRINTER_MODEL = 'QL-820NWB'
     PRINTER_PRINTER = 'tcp://192.168.1.33:9100'
 
+### Brand fonts
+
+The 10BitWorks brand typefaces are bundled in `app/static/fonts/brand/`:
+
+* `BarlowCondensed-Regular.ttf`, `BarlowCondensed-Bold.ttf`
+* `Barlow-Regular.ttf`, `Barlow-Medium.ttf`, `Barlow-SemiBold.ttf`
+* `JetBrainsMono-Regular.ttf`
+
+They are registered at startup from `BRAND_FONT_FOLDER` by reading each font's
+own metadata (via Pillow), so no fontconfig installation of the fonts is
+required. Bundled files take precedence over any system-installed copies of
+the same family/style. `BRAND_FONT_FAMILIES` controls which families are
+listed first (as the "10BitWorks brand" group) in the font pickers, and
+`LABEL_DEFAULT_FONT_FAMILY` / `LABEL_DEFAULT_FONT_STYLE` set the default font.
+To override the default, set these keys in `instance/application.py`.
+
 ### Startup
 
 To start the server, run `./run.py`.

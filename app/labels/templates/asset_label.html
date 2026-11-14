@@ -38,8 +38,12 @@
                 <div class="form-group">
                     <label for="fontFamily">Font</label>
                     <select class="form-control" id="fontFamily" onchange="debouncePreview()">
-                        {% for font in font_family_names %}
-                        <option value="{{ font }}">{{ font }}</option>
+                        {% for group_label, families in font_family_groups %}
+                        <optgroup label="{{ group_label }}">
+                            {% for font_family_name in families %}
+                            <option value="{{ font_family_name }}" {% if default_font_family == font_family_name %}selected{% endif %} style="font-family: '{{ font_family_name }}', sans-serif;">{{ font_family_name }}</option>
+                            {% endfor %}
+                        </optgroup>
                         {% endfor %}
                     </select>
                 </div>
@@ -88,9 +92,10 @@
 
 <script>
     // Default font
+    const defaultFont = {{ default_font_family|tojson }};
     const fontSelect = document.getElementById('fontFamily');
     for (let i = 0; i < fontSelect.options.length; i++) {
-        if (fontSelect.options[i].value === 'Brussels') {
+        if (fontSelect.options[i].value === defaultFont) {
             fontSelect.selectedIndex = i;
             break;
         }

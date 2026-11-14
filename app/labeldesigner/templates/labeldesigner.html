@@ -58,8 +58,12 @@
                         <div class="card-body">
                             <label for="fontFamily" style="margin-bottom: 0">Font Family:</label>
                             <select class="form-control" id="fontFamily" onChange="updateStyles()">
-                                {% for font_family_name in font_family_names %}
-                                    <option {% if default_font_family == font_family_name %}selected{% endif %}>{{font_family_name}}</option>
+                                {% for group_label, families in font_family_groups %}
+                                <optgroup label="{{ group_label }}">
+                                    {% for font_family_name in families %}
+                                    <option {% if default_font_family == font_family_name %}selected{% endif %} style="font-family: '{{ font_family_name }}', sans-serif;">{{ font_family_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
                                 {% endfor %}
                             </select>
 

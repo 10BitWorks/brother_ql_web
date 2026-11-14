@@ -23,8 +23,8 @@ class Config(object):
     LABEL_DEFAULT_FONT_SIZE = 70
     LABEL_DEFAULT_QR_SIZE = 10
     LABEL_DEFAULT_LINE_SPACING = 100
-    LABEL_DEFAULT_FONT_FAMILY = 'DejaVu Serif'
-    LABEL_DEFAULT_FONT_STYLE = 'Book'
+    LABEL_DEFAULT_FONT_FAMILY = 'Barlow Condensed'
+    LABEL_DEFAULT_FONT_STYLE = 'Bold'
 
     IMAGE_DEFAULT_MODE = 'grayscale'
     IMAGE_DEFAULT_BW_THRESHOLD = 70
@@ -35,3 +35,7 @@ class Config(object):
     LABEL_DEFAULT_MARGIN_RIGHT = 35
 
     FONT_FOLDER = ''
+
+    # Bundled 10BitWorks brand typefaces, source of truth: https://10bitworks.org/brand-assets/
+    BRAND_FONT_FOLDER = os.path.join(basedir, 'app', 'static', 'fonts', 'brand')
+    BRAND_FONT_FAMILIES = ('Barlow Condensed', 'Barlow', 'JetBrains Mono')

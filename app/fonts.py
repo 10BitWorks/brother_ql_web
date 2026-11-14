@@ -1,3 +1,5 @@
+import glob
+import os
 import subprocess
 import sys
 from collections import defaultdict
@@ -60,6 +62,42 @@ class Fonts:
             sys.exit(2)
 
         self.parse_fonts(raw)
+
+    def scan_font_files(self, folder):
+        """Register every .ttf/.otf in a directory using the font's own metadata.
+
+        Used for the bundled 10BitWorks brand fonts so they are found even when
+        fontconfig is missing or the fonts are not system-installed.
+        """
+        from PIL import ImageFont
+
+        for path in sorted(glob.glob(os.path.join(folder, '**', '*'), recursive=True)):
+            if not path.lower().endswith(('.ttf', '.otf')):
+                continue
+            try:
+                font = ImageFont.truetype(path, 12)
+                family, style = font.getname()
+            except OSError:
+                # unreadable or invalid font file: skip it
+                continue
+            family = (family or '').strip()
+            style = (style or '').strip() or 'Regular'
+            if not family:
+                continue
+            self.fonts[family][style] = path
+
+    def grouped_fontlist(self, brand_families):
+        """Return [('10BitWorks brand', [...]), ('System fonts', [...])] omitting empty groups."""
+        brand = [family for family in brand_families if family in self.fonts]
+        brand_lower = {family.lower() for family in brand}
+        system = [family for family in self.fontlist()
+                  if family.lower() not in brand_lower]
+        groups = []
+        if brand:
+            groups.append(('10BitWorks brand', brand))
+        if system:
+            groups.append(('System fonts', system))
+        return groups
 
     def fontlist(self):
         return sorted(self.fonts, key=str.lower)

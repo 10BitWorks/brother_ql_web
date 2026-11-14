@@ -29,7 +29,7 @@ LABEL_SIZES = [(
 def index():
     RED_SUPPORT = current_app.config['PRINTER_MODEL'] in two_color_support
     return render_template('labeldesigner.html',
-                           font_family_names=FONTS.fontlist(),
+                           font_family_groups=FONTS.grouped_fontlist(current_app.config['BRAND_FONT_FAMILIES']),
                            label_sizes=LABEL_SIZES,
                            red_support=RED_SUPPORT,
                            default_label_size=current_app.config['LABEL_DEFAULT_SIZE'],
@@ -53,7 +53,7 @@ def index():
 def get_font_styles():
     font = request.values.get(
         'font', current_app.config['LABEL_DEFAULT_FONT_FAMILY'])
-    return FONTS.fonts[font]
+    return FONTS.fonts.get(font, {})
 
 
 @bp.route('/api/preview', methods=['POST', 'GET'])

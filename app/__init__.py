@@ -52,6 +52,10 @@ def main(app):
     if app.config['FONT_FOLDER']:
         FONTS.scan_fonts_folder(app.config['FONT_FOLDER'])
 
+    brand_font_folder = app.config.get('BRAND_FONT_FOLDER')
+    if brand_font_folder:
+        FONTS.scan_font_files(brand_font_folder)
+
     if not FONTS.fonts_available():
         app.logger.error(
             "Not a single font was found on your system. Please install some.\n")
